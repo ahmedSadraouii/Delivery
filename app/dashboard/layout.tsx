@@ -7,7 +7,9 @@ export default function Layout({ children }: { children: React.ReactNode }) {
       <div className="w-full flex-none md:w-64">
         <SideNav />
       </div>
-      <div className={`${inter.className} w-screen antialiased`}>
+      <div
+        className={`${inter.className} w-screen antialiased md:pr-4 md:pt-6`}
+      >
         {children}
       </div>
     </div>
