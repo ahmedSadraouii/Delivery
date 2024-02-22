@@ -134,3 +134,63 @@ export async function authenticate(
     throw error;
   }
 }
+
+export const registerUser = async (
+  email: string,
+  password: string,
+): Promise<string> => {
+  try {
+    const response = await fetch('http://localhost:9000/api/v1/auth/register', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        email,
+        password,
+        isCompany: false,
+      }),
+    });
+
+    if (response.ok) {
+      return 'success';
+    } else {
+      const errorData = await response.json();
+      const errorMessage = errorData?.error || 'Registration failed';
+      console.error(errorMessage);
+      return errorMessage;
+    }
+  } catch (error) {
+    console.error('Error during registration:', error);
+    return 'error';
+  }
+};
+
+export const confirmEmail = async (
+  email: string,
+  token: string,
+): Promise<boolean> => {
+  try {
+    const url = `http://localhost:9000/api/v1/auth/confirm-email?email=${encodeURIComponent(
+      email,
+    )}`;
+    const response = await fetch(url, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        token,
+      }),
+    });
+
+    if (response.ok) {
+      return true;
+    } else {
+      return false;
+    }
+  } catch (error) {
+    console.error('Error during email confirmation:', error);
+    return false; // Confirmation failed due to an error
+  }
+};
