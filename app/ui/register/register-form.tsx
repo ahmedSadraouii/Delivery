@@ -21,7 +21,7 @@ export default function LoginForm() {
     password: '',
     confirmPassword: '',
   });
-  const [showPopUp, setShowPopUp] = useState(false);
+  const [showPopUp, setShowPopUp] = useState(true);
   const [errorMessage, setErrorMessage] = useState('');
   const [email, setEmail] = useState('');
   const [formPending, setFormPending] = useState(false);
