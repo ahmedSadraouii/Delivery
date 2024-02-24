@@ -124,11 +124,15 @@ export async function authenticate(
     await signIn('credentials', formData);
   } catch (error) {
     if (error instanceof AuthError) {
-      switch (error.type) {
-        case 'CredentialsSignin':
-          return 'Invalid credentials.';
-        default:
-          return 'Something went wrong.';
+      const errorMessage = error.message.toLowerCase();
+      if (errorMessage.includes('please confirm your email')) {
+        return 'Please confirm your email';
+      } else if (errorMessage.includes('invalid credentials')) {
+        return 'Invalid credentials';
+      } else if (errorMessage.includes('user not found')) {
+        return 'User not found';
+      } else {
+        return 'Something went wrong.';
       }
     }
     throw error;
@@ -192,5 +196,37 @@ export const confirmEmail = async (
   } catch (error) {
     console.error('Error during email confirmation:', error);
     return false; // Confirmation failed due to an error
+  }
+};
+export const resentConfirmationEmail = async (email: string) => {
+  try {
+    // Make the resend email request to the server using fetch
+    const response = await fetch(
+      `http://localhost:9000/api/v1/auth/resend-confirmation-email?email=${encodeURIComponent(
+        email,
+      )}`,
+      {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+      },
+    );
+
+    // Parse the response JSON
+    const data = await response.json();
+
+    // Check if the request was successful
+    if (data.success) {
+      console.log(data.success);
+      // Show an alert for successful resend
+      return true;
+    } else {
+      return false;
+    }
+  } catch (error) {
+    console.error('Error during resend email request:', error);
+    // Show an alert for unexpected errors
+    alert('An unexpected error occurred. Please try again.');
   }
 };

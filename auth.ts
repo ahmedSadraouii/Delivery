@@ -1,36 +1,10 @@
-import NextAuth from 'next-auth';
+import NextAuth, { AuthError } from 'next-auth';
 import Credentials from 'next-auth/providers/credentials';
 import { authConfig } from './auth.config';
 import { z } from 'zod';
 
 import type { User } from '@/app/lib/definitions';
 import GoogleProvider from 'next-auth/providers/google';
-
-async function fetchExternalApi(
-  email: string,
-  password: string,
-): Promise<User | null> {
-  try {
-    const response = await fetch('http://localhost:9000/api/v1/auth/login', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({ email, password }),
-    });
-
-    if (response.ok) {
-      const user = await response.json();
-      return user;
-    } else {
-      console.log('Failed to authenticate user with external API');
-      return null;
-    }
-  } catch (error) {
-    console.error('Failed to fetch user:', error);
-    throw new Error('Failed to fetch user.');
-  }
-}
 
 export const { auth, signIn, signOut } = NextAuth({
   ...authConfig,
@@ -43,14 +17,40 @@ export const { auth, signIn, signOut } = NextAuth({
 
         if (parsedCredentials.success) {
           const { email, password } = parsedCredentials.data;
-          const user = await fetchExternalApi(email, password);
-          if (user) return user;
-        }
 
-        console.log(
-          'Invalid credentials or failed to authenticate with external API',
-        );
-        return null;
+          const response = await fetch(
+            'http://localhost:9000/api/v1/auth/login',
+            {
+              method: 'POST',
+              headers: {
+                'Content-Type': 'application/json',
+              },
+              body: JSON.stringify({ email, password }),
+            },
+          );
+
+          if (response.ok) {
+            const user = await response.json();
+            return user;
+          } else {
+            const errorResponse = await response.json();
+            const errorMessage =
+              errorResponse?.error ||
+              'Failed to authenticate user with external API';
+
+            switch (errorMessage) {
+              case 'Please confirm your email':
+                throw new AuthError('Please confirm your email');
+              case 'Invalid credentials':
+                throw new AuthError('Invalid credentials');
+              case 'User not found':
+                throw new AuthError('User not found');
+              default:
+                console.log('Failed to authenticate user with external API');
+                throw new AuthError('Something went wrong');
+            }
+          }
+        }
       },
     }),
     GoogleProvider({

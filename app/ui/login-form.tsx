@@ -1,6 +1,5 @@
 'use client';
 import { useFormState, useFormStatus } from 'react-dom';
-import { authenticate } from '@/app/lib/actions';
 import {
   AtSymbolIcon,
   KeyIcon,
@@ -12,18 +11,27 @@ import { Button } from './button';
 import { signIn } from '@/auth';
 import Link from 'next/link';
 import PopUpComponent from './register/confirmation-pop-up';
-import { useState } from 'react';
+import { AuthError } from 'next-auth';
+import { useEffect, useState } from 'react';
+import { authenticate } from '../lib/actions';
 
 export default function LoginForm() {
   const [errorMessage, dispatch] = useFormState(authenticate, undefined);
   const [showPopUp, setShowPopUp] = useState(false);
   const [email, setEmail] = useState('');
+  useEffect(() => {
+    if (errorMessage && errorMessage === 'Please confirm your email') {
+      setShowPopUp(true);
+    }
+  }, [errorMessage]);
+
   // Function to handle Google login
   const handleGoogleLogin = async () => {
     // You can use the NextAuth signIn function with the provider name
     // In this case, the provider name is 'google'
     await signIn('google');
   };
+
   return (
     <>
       <form action={dispatch} className="space-y-3">
@@ -44,6 +52,7 @@ export default function LoginForm() {
                   type="email"
                   name="email"
                   placeholder="Enter your email address"
+                  onChange={(e) => setEmail(e.target.value)}
                   required
                 />
                 <AtSymbolIcon className="pointer-events-none absolute left-3 top-1/2 h-[18px] w-[18px] -translate-y-1/2 text-gray-500 peer-focus:text-gray-900" />

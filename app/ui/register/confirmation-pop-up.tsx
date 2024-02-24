@@ -6,7 +6,7 @@ import React, {
   useRef,
   useState,
 } from 'react';
-import { confirmEmail } from '@/app/lib/actions';
+import { confirmEmail, resentConfirmationEmail } from '@/app/lib/actions';
 import { toast, ToastContainer } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 import { useRouter } from 'next/navigation';
@@ -45,17 +45,21 @@ const PopUpComponent: React.FC<PopUpProps> = ({ email, onClose }) => {
     if (confirmationResult) {
       onClose();
       router.push('/login');
+      alert('email confirmed press login');
     } else {
       console.log('first');
       setConfirmationError(false);
       // Handle confirmation failure
-      setErrorText('Wrong confirmation Code. Please try again.');
-      // Make the inputs have red borders (you may need to define appropriate CSS classes)
-      inputRefs.forEach((ref) => {
-        if (ref.current) {
-          ref.current.classList.add('error-border'); // Add a CSS class for error styling
-        }
-      });
+      setErrorText('Wrong confirmation Code.');
+    }
+  };
+  const handleResendEmail = async () => {
+    const confirmationResult = await resentConfirmationEmail(email);
+
+    if (confirmationResult) {
+      alert('Confirmation resent confirmed successfully');
+    } else {
+      setErrorText('Please try again.');
     }
   };
   useEffect(() => {
@@ -63,12 +67,23 @@ const PopUpComponent: React.FC<PopUpProps> = ({ email, onClose }) => {
       ? toast.warning('Email confirmed successfully')
       : toast.warning('Verify the code');
   }, [confirmationSuccess, confirmationError]);
+
   return (
     <div className="fixed inset-0 overflow-y-auto">
       <div className="flex min-h-screen items-center justify-center">
         <div className="w-full max-w-md rounded-lg bg-orange-500 p-4 shadow-lg">
-          <h2 className="mb-4 text-2xl text-white">Enter Confirmation Code</h2>
-          <div className="mb-4 flex space-x-2">
+          <div>
+            <h2 className="mb-4 text-center text-2xl text-white">
+              Enter Confirmation Code
+            </h2>
+            <p
+              onClick={handleResendEmail}
+              className="cursor-pointer px-4  py-2 text-center text-blue-400 "
+            >
+              Resend Email
+            </p>
+          </div>
+          <div className="mb-4 flex items-center justify-center space-x-2">
             {inputRefs.map((ref, index) => (
               <input
                 key={index}
